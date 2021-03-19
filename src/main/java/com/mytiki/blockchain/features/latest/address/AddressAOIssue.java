@@ -10,30 +10,31 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AddressAOIssue {
 
-    private String publicKey;
-    private String signature;
+    private String dataKey;
+    private String signKey;
 
     @JsonCreator
     public AddressAOIssue(
-            @JsonProperty(required = true) String publicKey,
-            @JsonProperty(required = true) String signature) {
-        this.publicKey = publicKey;
-        this.signature = signature;
+            @JsonProperty(required = true) String dataKey,
+            @JsonProperty(required = true) String signKey
+    ) {
+        this.dataKey = dataKey;
+        this.signKey = signKey;
     }
 
-    public String getPublicKey() {
-        return publicKey;
+    public String getDataKey() {
+        return dataKey;
     }
 
-    public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
+    public void setDataKey(String dataKey) {
+        this.dataKey = dataKey;
     }
 
-    public String getSignature() {
-        return signature;
+    public String getSignKey() {
+        return signKey;
     }
 
-    public void setSignature(String signature) {
-        this.signature = signature;
+    public void setSignKey(String signKey) {
+        this.signKey = signKey;
     }
 }

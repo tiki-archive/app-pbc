@@ -9,7 +9,8 @@
 CREATE TABLE IF NOT EXISTS address(
     id BIGSERIAL NOT NULL,
     address TEXT NOT NULL UNIQUE,
-    public_key TEXT NOT NULL,
+    data_key TEXT NOT NULL,
+    sign_key TEXT NOT NULL,
     issued_utc TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY(id)
 );
@@ -21,8 +22,7 @@ CREATE TABLE IF NOT EXISTS block(
     id BIGSERIAL NOT NULL,
     hash TEXT NOT NULL UNIQUE,
     previous_hash TEXT NOT NULL,
-    address BIGINT NOT NULL REFERENCES address (id),
-    signature TEXT NOT NULL,
+    address TEXT NOT NULL REFERENCES address (address),
     created_utc TIMESTAMP WITH TIME ZONE NOT NULL,
     data TEXT NOT NULL,
     PRIMARY KEY(id)

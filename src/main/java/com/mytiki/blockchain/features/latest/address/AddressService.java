@@ -7,21 +7,26 @@ package com.mytiki.blockchain.features.latest.address;
 
 import com.mytiki.common.exception.ApiExceptionFactory;
 import org.apache.commons.codec.binary.Hex;
+import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.encodings.PKCS1Encoding;
+import org.bouncycastle.crypto.engines.RSAEngine;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.util.PublicKeyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
-import java.security.*;
-import java.security.spec.EncodedKeySpec;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Optional;
+import java.util.UUID;
 
 public class AddressService {
 
@@ -29,7 +34,6 @@ public class AddressService {
     private final AddressRepository addressRepository;
 
     private static final String FAILED_ISSUE_MSG = "Failed to issue address";
-    private static final String INVALID_SIGNATURE_MSG = "Invalid signature";
 
     public AddressService(AddressRepository addressRepository) {
         this.addressRepository = addressRepository;
@@ -37,21 +41,17 @@ public class AddressService {
 
     public AddressAORsp issue(AddressAOIssue addressAOIssue){
         try {
-            if(!validateSignature(addressAOIssue.getPublicKey(), addressAOIssue.getSignature()))
-                throw ApiExceptionFactory.exception(HttpStatus.BAD_REQUEST, INVALID_SIGNATURE_MSG);
-        } catch (InvalidKeySpecException | InvalidKeyException | SignatureException e) {
-            logger.error("Unable to execute ECDSA", e);
-            throw ApiExceptionFactory.exception(HttpStatus.BAD_REQUEST, INVALID_SIGNATURE_MSG);
-        } catch (NoSuchAlgorithmException e){
-            logger.error("Unable to execute ECDSA", e);
+            testPublicKey(addressAOIssue.getDataKey());
+        } catch (IOException | InvalidCipherTextException e) {
+            logger.error("Unable to execute RSA", e);
             throw ApiExceptionFactory.exception(HttpStatus.UNPROCESSABLE_ENTITY, FAILED_ISSUE_MSG);
         }
 
         String reqAddress;
         try {
-            reqAddress = addressFromKey(addressAOIssue.getPublicKey());
+            reqAddress = addressFromKey(addressAOIssue.getSignKey());
         } catch (NoSuchAlgorithmException e) {
-            logger.error("Unable to execute SHA-512", e);
+            logger.error("Unable to execute SHA3-256", e);
             throw ApiExceptionFactory.exception(HttpStatus.UNPROCESSABLE_ENTITY, FAILED_ISSUE_MSG);
         }
 
@@ -63,7 +63,8 @@ public class AddressService {
 
         AddressDO addressDO = new AddressDO();
         addressDO.setAddress(reqAddress);
-        addressDO.setPublicKey(addressAOIssue.getPublicKey());
+        addressDO.setDataKey(addressAOIssue.getDataKey());
+        addressDO.setSignKey(addressAOIssue.getSignKey());
         addressDO.setIssued(ZonedDateTime.now(ZoneOffset.UTC));
         AddressDO savedAddressDO = addressRepository.save(addressDO);
 
@@ -73,6 +74,10 @@ public class AddressService {
         return addressAORsp;
     }
 
+    public Optional<AddressDO> getByAddress(String address){
+        return addressRepository.findByAddress(address);
+    }
+
     private String addressFromKey(String publicKey) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("SHA3-256");
         byte[] bytes = md.digest(publicKey.getBytes(StandardCharsets.UTF_8));
@@ -80,14 +85,11 @@ public class AddressService {
         return new String(Hex.encodeHex(truncated));
     }
 
-    private boolean validateSignature(String publicKeyBase64, String signature)
-            throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
-        Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
-        EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyBase64));
-        KeyFactory keyFactory = KeyFactory.getInstance("EC");
-        PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
-        ecdsaVerify.initVerify(publicKey);
-        ecdsaVerify.update(publicKeyBase64.getBytes(StandardCharsets.UTF_8));
-        return ecdsaVerify.verify(Base64.getDecoder().decode(signature));
+    private void testPublicKey(String publicKeyBase64) throws IOException, InvalidCipherTextException {
+        AsymmetricKeyParameter publicKey = PublicKeyFactory.createKey(Base64.getDecoder().decode(publicKeyBase64));
+        PKCS1Encoding rsaCipher = new org.bouncycastle.crypto.encodings.PKCS1Encoding(new RSAEngine());
+        rsaCipher.init(true, publicKey);
+        String randomText = UUID.randomUUID().toString();
+        rsaCipher.processBlock(randomText.getBytes(StandardCharsets.UTF_8), 0, randomText.length());
     }
 }

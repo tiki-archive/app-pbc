@@ -6,15 +6,17 @@
 package com.mytiki.blockchain.features.latest.address;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "address")
-public class AddressDO {
+public class AddressDO implements Serializable {
 
     private Long id;
     private String address;
-    private String publicKey;
+    private String dataKey;
+    private String signKey;
     private ZonedDateTime issued;
 
     @Id
@@ -37,13 +39,22 @@ public class AddressDO {
         this.address = address;
     }
 
-    @Column(name = "public_key")
-    public String getPublicKey() {
-        return publicKey;
+    @Column(name = "data_key")
+    public String getDataKey() {
+        return dataKey;
     }
 
-    public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
+    public void setDataKey(String dataKey) {
+        this.dataKey = dataKey;
+    }
+
+    @Column(name = "sign_key")
+    public String getSignKey() {
+        return signKey;
+    }
+
+    public void setSignKey(String signKey) {
+        this.signKey = signKey;
     }
 
     @Column(name = "issued_utc")
