@@ -19,11 +19,12 @@ import org.springframework.http.HttpStatus;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
@@ -40,12 +41,8 @@ public class AddressService {
     }
 
     public AddressAORsp issue(AddressAOIssue addressAOIssue){
-        try {
-            testPublicKey(addressAOIssue.getDataKey());
-        } catch (IOException | InvalidCipherTextException e) {
-            logger.error("Unable to execute RSA", e);
-            throw ApiExceptionFactory.exception(HttpStatus.UNPROCESSABLE_ENTITY, FAILED_ISSUE_MSG);
-        }
+        if(!testDataKey(addressAOIssue.getDataKey()) || !testSignKey(addressAOIssue.getSignKey()))
+            throw ApiExceptionFactory.exception(HttpStatus.BAD_REQUEST, FAILED_ISSUE_MSG);
 
         String reqAddress;
         try {
@@ -80,16 +77,35 @@ public class AddressService {
 
     private String addressFromKey(String publicKey) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("SHA3-256");
-        byte[] bytes = md.digest(publicKey.getBytes(StandardCharsets.UTF_8));
-        byte[] truncated = Arrays.copyOfRange(bytes, 12, bytes.length);
-        return new String(Hex.encodeHex(truncated));
+        byte[] addressBytes = md.digest(publicKey.getBytes(StandardCharsets.UTF_8));
+        return new String(Hex.encodeHex(addressBytes));
     }
 
-    private void testPublicKey(String publicKeyBase64) throws IOException, InvalidCipherTextException {
-        AsymmetricKeyParameter publicKey = PublicKeyFactory.createKey(Base64.getDecoder().decode(publicKeyBase64));
-        PKCS1Encoding rsaCipher = new org.bouncycastle.crypto.encodings.PKCS1Encoding(new RSAEngine());
-        rsaCipher.init(true, publicKey);
-        String randomText = UUID.randomUUID().toString();
-        rsaCipher.processBlock(randomText.getBytes(StandardCharsets.UTF_8), 0, randomText.length());
+    private boolean testDataKey(String dataKey) {
+        try {
+            AsymmetricKeyParameter publicKey = PublicKeyFactory.createKey(Base64.getDecoder().decode(dataKey));
+            PKCS1Encoding rsaCipher = new org.bouncycastle.crypto.encodings.PKCS1Encoding(new RSAEngine());
+            rsaCipher.init(true, publicKey);
+            String randomText = UUID.randomUUID().toString();
+            rsaCipher.processBlock(randomText.getBytes(StandardCharsets.UTF_8), 0, randomText.length());
+            return true;
+        }catch (IOException | InvalidCipherTextException e){
+            logger.error("Unable to execute RSA", e);
+            return false;
+        }
+    }
+
+    private boolean testSignKey(String signKey) {
+        try {
+            Signature ecdsaVerify = Signature.getInstance("SHA256withECDSA");
+            EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(signKey));
+            KeyFactory keyFactory = KeyFactory.getInstance("EC");
+            PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+            ecdsaVerify.initVerify(publicKey);
+            return true;
+        }catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException e){
+            logger.error("Unable to execute ECDSA", e);
+            return false;
+        }
     }
 }

@@ -11,6 +11,7 @@ import com.mytiki.common.exception.ApiExceptionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
@@ -39,6 +40,7 @@ public class BlockService {
         this.addressService = addressService;
     }
 
+    @Transactional
     public BlockAORsp write(BlockAOWrite blockAOWrite){
         Optional<AddressDO> addressDO = addressService.getByAddress(blockAOWrite.getAddress());
         if(addressDO.isEmpty())
