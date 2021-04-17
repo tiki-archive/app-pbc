@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS address(
     data_key TEXT NOT NULL,
     sign_key TEXT NOT NULL,
     issued_utc TIMESTAMP WITH TIME ZONE NOT NULL,
+    refer VARCHAR(5) NOT NULL,
+    refer_from VARCHAR(5),
     PRIMARY KEY(id)
 );
 
