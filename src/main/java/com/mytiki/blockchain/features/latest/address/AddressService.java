@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
+import javax.transaction.Transactional;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
@@ -29,6 +30,8 @@ import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
 
+import static java.lang.Character.MAX_RADIX;
+
 public class AddressService {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -40,6 +43,7 @@ public class AddressService {
         this.addressRepository = addressRepository;
     }
 
+    @Transactional
     public AddressAORsp issue(AddressAOIssue addressAOIssue){
         if(!testDataKey(addressAOIssue.getDataKey()) || !testSignKey(addressAOIssue.getSignKey()))
             throw ApiExceptionFactory.exception(HttpStatus.BAD_REQUEST, FAILED_ISSUE_MSG);
@@ -63,11 +67,16 @@ public class AddressService {
         addressDO.setDataKey(addressAOIssue.getDataKey());
         addressDO.setSignKey(addressAOIssue.getSignKey());
         addressDO.setIssued(ZonedDateTime.now(ZoneOffset.UTC));
+        addressDO.setRefer("");
+        addressDO.setReferFrom(addressAOIssue.getReferFrom());
         AddressDO savedAddressDO = addressRepository.save(addressDO);
+        savedAddressDO.setRefer(toAlphaNumeric(savedAddressDO.getId()));
+        AddressDO finalAddressDO = addressRepository.save(addressDO);
 
         AddressAORsp addressAORsp = new AddressAORsp();
-        addressAORsp.setAddress(savedAddressDO.getAddress());
-        addressAORsp.setIssued(savedAddressDO.getIssued());
+        addressAORsp.setAddress(finalAddressDO.getAddress());
+        addressAORsp.setIssued(finalAddressDO.getIssued());
+        addressAORsp.setRefer(finalAddressDO.getRefer());
         return addressAORsp;
     }
 
@@ -107,5 +116,14 @@ public class AddressService {
             logger.error("Unable to execute ECDSA", e);
             return false;
         }
+    }
+
+    private String toAlphaNumeric(Long id){
+        String val = Long.toString(id, MAX_RADIX).toUpperCase();
+        StringBuilder res = new StringBuilder();
+        int numZeros = 5 - val.length();
+        res.append("0".repeat(Math.max(0, numZeros)));
+        res.append(val);
+        return res.toString();
     }
 }

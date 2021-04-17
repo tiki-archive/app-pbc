@@ -9,6 +9,7 @@ import com.mytiki.common.ApiConstants;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jose.proc.SingleKeyJWSKeySelector;
+import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.jwt.proc.JWTProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,6 +127,7 @@ public class ConfigSecurity extends WebSecurityConfigurerAdapter {
                     .getInstance("EC")
                     .generatePublic(publicKeySpec);
             processor.setJWSKeySelector(new SingleKeyJWSKeySelector<>(JWSAlgorithm.ES256, publicKey));
+            processor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<>());
             return processor;
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             throw new RuntimeException(e);
