@@ -68,15 +68,6 @@ public class AddressDO implements Serializable {
         this.issued = issued;
     }
 
-    @Column(name = "refer")
-    public String getRefer() {
-        return refer;
-    }
-
-    public void setRefer(String refer) {
-        this.refer = refer;
-    }
-
     @Column(name = "refer_from")
     public String getReferFrom() {
         return referFrom;

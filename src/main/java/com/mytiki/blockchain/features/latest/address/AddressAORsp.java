@@ -11,7 +11,6 @@ public class AddressAORsp {
 
     private String address;
     private ZonedDateTime issued;
-    private String refer;
 
     public String getAddress() {
         return address;
@@ -27,13 +26,5 @@ public class AddressAORsp {
 
     public void setIssued(ZonedDateTime issued) {
         this.issued = issued;
-    }
-
-    public String getRefer() {
-        return refer;
-    }
-
-    public void setRefer(String refer) {
-        this.refer = refer;
     }
 }

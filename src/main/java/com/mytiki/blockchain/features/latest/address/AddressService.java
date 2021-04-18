@@ -67,16 +67,12 @@ public class AddressService {
         addressDO.setDataKey(addressAOIssue.getDataKey());
         addressDO.setSignKey(addressAOIssue.getSignKey());
         addressDO.setIssued(ZonedDateTime.now(ZoneOffset.UTC));
-        addressDO.setRefer("");
         addressDO.setReferFrom(addressAOIssue.getReferFrom());
-        AddressDO savedAddressDO = addressRepository.save(addressDO);
-        savedAddressDO.setRefer(toAlphaNumeric(savedAddressDO.getId()));
-        AddressDO finalAddressDO = addressRepository.save(addressDO);
+        AddressDO savedDO = addressRepository.save(addressDO);
 
         AddressAORsp addressAORsp = new AddressAORsp();
-        addressAORsp.setAddress(finalAddressDO.getAddress());
-        addressAORsp.setIssued(finalAddressDO.getIssued());
-        addressAORsp.setRefer(finalAddressDO.getRefer());
+        addressAORsp.setAddress(savedDO.getAddress());
+        addressAORsp.setIssued(savedDO.getIssued());
         return addressAORsp;
     }
 
