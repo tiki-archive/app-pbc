@@ -18,7 +18,6 @@ public class AddressDO implements Serializable {
     private String dataKey;
     private String signKey;
     private ZonedDateTime issued;
-    private String refer;
     private String referFrom;
 
     @Id

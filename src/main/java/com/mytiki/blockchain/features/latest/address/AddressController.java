@@ -8,10 +8,7 @@ package com.mytiki.blockchain.features.latest.address;
 import com.mytiki.common.ApiConstants;
 import com.mytiki.common.reply.ApiReplyAO;
 import com.mytiki.common.reply.ApiReplyAOFactory;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value = AddressController.PATH_CONTROLLER)
@@ -19,6 +16,7 @@ public class AddressController {
 
     public static final String PATH_CONTROLLER = ApiConstants.API_LATEST_ROUTE + "address";
     public static final String PATH_ISSUE = "/issue";
+    public static final String PATH_REFER = "/refer";
 
     private final AddressService addressService;
 
@@ -27,7 +25,12 @@ public class AddressController {
     }
 
     @RequestMapping(method = RequestMethod.POST, path = PATH_ISSUE)
-    public ApiReplyAO<AddressAORsp> postRefresh(@RequestBody AddressAOIssue body){
+    public ApiReplyAO<AddressAOIssueRsp> postRefresh(@RequestBody AddressAOIssue body){
         return ApiReplyAOFactory.ok(addressService.issue(body));
+    }
+
+    @RequestMapping(method = RequestMethod.GET, path = PATH_REFER + "/{address}/count")
+    public ApiReplyAO<AddressAOReferRsp> postRefresh(@PathVariable String address){
+        return ApiReplyAOFactory.ok(addressService.getReferCount(address));
     }
 }

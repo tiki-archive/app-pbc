@@ -7,7 +7,7 @@ package com.mytiki.blockchain.features.latest.address;
 
 import java.time.ZonedDateTime;
 
-public class AddressAORsp {
+public class AddressAOIssueRsp {
 
     private String address;
     private ZonedDateTime issued;
