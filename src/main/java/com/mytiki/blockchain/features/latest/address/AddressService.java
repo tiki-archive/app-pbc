@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
-import javax.transaction.Transactional;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
@@ -27,10 +26,9 @@ import java.security.spec.X509EncodedKeySpec;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import static java.lang.Character.MAX_RADIX;
 
 public class AddressService {
 
@@ -43,8 +41,7 @@ public class AddressService {
         this.addressRepository = addressRepository;
     }
 
-    @Transactional
-    public AddressAORsp issue(AddressAOIssue addressAOIssue){
+    public AddressAOIssueRsp issue(AddressAOIssue addressAOIssue){
         if(!testDataKey(addressAOIssue.getDataKey()) || !testSignKey(addressAOIssue.getSignKey()))
             throw ApiExceptionFactory.exception(HttpStatus.BAD_REQUEST, FAILED_ISSUE_MSG);
 
@@ -67,21 +64,24 @@ public class AddressService {
         addressDO.setDataKey(addressAOIssue.getDataKey());
         addressDO.setSignKey(addressAOIssue.getSignKey());
         addressDO.setIssued(ZonedDateTime.now(ZoneOffset.UTC));
-        addressDO.setRefer("");
         addressDO.setReferFrom(addressAOIssue.getReferFrom());
-        AddressDO savedAddressDO = addressRepository.save(addressDO);
-        savedAddressDO.setRefer(toAlphaNumeric(savedAddressDO.getId()));
-        AddressDO finalAddressDO = addressRepository.save(addressDO);
+        AddressDO savedDO = addressRepository.save(addressDO);
 
-        AddressAORsp addressAORsp = new AddressAORsp();
-        addressAORsp.setAddress(finalAddressDO.getAddress());
-        addressAORsp.setIssued(finalAddressDO.getIssued());
-        addressAORsp.setRefer(finalAddressDO.getRefer());
+        AddressAOIssueRsp addressAORsp = new AddressAOIssueRsp();
+        addressAORsp.setAddress(savedDO.getAddress());
+        addressAORsp.setIssued(savedDO.getIssued());
         return addressAORsp;
     }
 
     public Optional<AddressDO> getByAddress(String address){
         return addressRepository.findByAddress(address);
+    }
+
+    public AddressAOReferRsp getReferCount(String address) {
+        List<AddressDO> addressDOList = addressRepository.findByReferFrom(address);
+        AddressAOReferRsp rsp = new AddressAOReferRsp();
+        rsp.setCount(addressDOList.size());
+        return rsp;
     }
 
     private String addressFromKey(String publicKey) throws NoSuchAlgorithmException {
@@ -116,14 +116,5 @@ public class AddressService {
             logger.error("Unable to execute ECDSA", e);
             return false;
         }
-    }
-
-    private String toAlphaNumeric(Long id){
-        String val = Long.toString(id, MAX_RADIX).toUpperCase();
-        StringBuilder res = new StringBuilder();
-        int numZeros = 5 - val.length();
-        res.append("0".repeat(Math.max(0, numZeros)));
-        res.append(val);
-        return res.toString();
     }
 }

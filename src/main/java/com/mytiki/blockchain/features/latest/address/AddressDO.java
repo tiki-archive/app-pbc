@@ -18,7 +18,6 @@ public class AddressDO implements Serializable {
     private String dataKey;
     private String signKey;
     private ZonedDateTime issued;
-    private String refer;
     private String referFrom;
 
     @Id
@@ -66,15 +65,6 @@ public class AddressDO implements Serializable {
 
     public void setIssued(ZonedDateTime issued) {
         this.issued = issued;
-    }
-
-    @Column(name = "refer")
-    public String getRefer() {
-        return refer;
-    }
-
-    public void setRefer(String refer) {
-        this.refer = refer;
     }
 
     @Column(name = "refer_from")
