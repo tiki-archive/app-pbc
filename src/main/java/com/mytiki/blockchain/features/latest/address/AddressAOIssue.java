@@ -12,17 +12,14 @@ public class AddressAOIssue {
 
     private String dataKey;
     private String signKey;
-    private String referFrom;
 
     @JsonCreator
     public AddressAOIssue(
             @JsonProperty(required = true) String dataKey,
-            @JsonProperty(required = true) String signKey,
-            @JsonProperty String referFrom
+            @JsonProperty(required = true) String signKey
     ) {
         this.dataKey = dataKey;
         this.signKey = signKey;
-        this.referFrom = referFrom;
     }
 
     public String getDataKey() {
@@ -39,13 +36,5 @@ public class AddressAOIssue {
 
     public void setSignKey(String signKey) {
         this.signKey = signKey;
-    }
-
-    public String getReferFrom() {
-        return referFrom;
-    }
-
-    public void setReferFrom(String referFrom) {
-        this.referFrom = referFrom;
     }
 }

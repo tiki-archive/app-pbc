@@ -19,6 +19,7 @@ public class AddressDO implements Serializable {
     private String signKey;
     private ZonedDateTime issued;
     private String referFrom;
+    private String shortCode;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -67,12 +68,23 @@ public class AddressDO implements Serializable {
         this.issued = issued;
     }
 
+    @Deprecated
     @Column(name = "refer_from")
     public String getReferFrom() {
         return referFrom;
     }
 
+    @Deprecated
     public void setReferFrom(String referFrom) {
         this.referFrom = referFrom;
+    }
+
+    @Column(name = "short_code")
+    public String getShortCode() {
+        return shortCode;
+    }
+
+    public void setShortCode(String shortCode) {
+        this.shortCode = shortCode;
     }
 }

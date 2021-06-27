@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS address(
     data_key TEXT NOT NULL,
     sign_key TEXT NOT NULL,
     issued_utc TIMESTAMP WITH TIME ZONE NOT NULL,
-    refer_from TEXT,
+    short_code TEXT,
     PRIMARY KEY(id)
 );
 
