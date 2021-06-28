@@ -92,7 +92,7 @@ public class AddressService {
         if(addressDOOptional.isPresent()){
             AddressDO addressDO = addressDOOptional.get();
             if(addressDO.getShortCode() == null){
-                addressDO.setShortCode(toAlphaNumeric(addressDO.getId()));
+                addressDO.setShortCode("$" + toAlphaNumeric(addressDO.getId()));
                 addressDO = addressRepository.save(addressDO);
             }
             rsp.setCode(addressDO.getShortCode());
