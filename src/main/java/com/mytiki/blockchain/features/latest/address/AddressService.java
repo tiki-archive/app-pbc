@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static java.lang.Character.MAX_RADIX;
+
 public class AddressService {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -64,7 +66,6 @@ public class AddressService {
         addressDO.setDataKey(addressAOIssue.getDataKey());
         addressDO.setSignKey(addressAOIssue.getSignKey());
         addressDO.setIssued(ZonedDateTime.now(ZoneOffset.UTC));
-        addressDO.setReferFrom(addressAOIssue.getReferFrom());
         AddressDO savedDO = addressRepository.save(addressDO);
 
         AddressAOIssueRsp addressAORsp = new AddressAOIssueRsp();
@@ -77,10 +78,25 @@ public class AddressService {
         return addressRepository.findByAddress(address);
     }
 
+    @Deprecated
     public AddressAOReferRsp getReferCount(String address) {
         List<AddressDO> addressDOList = addressRepository.findByReferFrom(address);
         AddressAOReferRsp rsp = new AddressAOReferRsp();
         rsp.setCount(addressDOList.size());
+        return rsp;
+    }
+
+    public AddressAOCodeRsp getShortCode(String address) {
+        AddressAOCodeRsp rsp = new AddressAOCodeRsp();
+        Optional<AddressDO> addressDOOptional = getByAddress(address);
+        if(addressDOOptional.isPresent()){
+            AddressDO addressDO = addressDOOptional.get();
+            if(addressDO.getShortCode() == null){
+                addressDO.setShortCode("$" + toAlphaNumeric(addressDO.getId()));
+                addressDO = addressRepository.save(addressDO);
+            }
+            rsp.setCode(addressDO.getShortCode());
+        }
         return rsp;
     }
 
@@ -116,5 +132,14 @@ public class AddressService {
             logger.error("Unable to execute ECDSA", e);
             return false;
         }
+    }
+
+    private String toAlphaNumeric(Long id){
+        String val = Long.toString(id, MAX_RADIX).toUpperCase();
+        StringBuilder res = new StringBuilder();
+        int numZeros = 5 - val.length();
+        res.append("0".repeat(Math.max(0, numZeros)));
+        res.append(val);
+        return res.toString();
     }
 }

@@ -16,7 +16,9 @@ public class AddressController {
 
     public static final String PATH_CONTROLLER = ApiConstants.API_LATEST_ROUTE + "address";
     public static final String PATH_ISSUE = "/issue";
+    @Deprecated
     public static final String PATH_REFER = "/refer";
+    public static final String PATH_CODE = "/code";
 
     private final AddressService addressService;
 
@@ -29,8 +31,14 @@ public class AddressController {
         return ApiReplyAOFactory.ok(addressService.issue(body));
     }
 
+    @Deprecated
     @RequestMapping(method = RequestMethod.GET, path = PATH_REFER + "/{address}/count")
-    public ApiReplyAO<AddressAOReferRsp> postRefresh(@PathVariable String address){
+    public ApiReplyAO<AddressAOReferRsp> getCount(@PathVariable String address){
         return ApiReplyAOFactory.ok(addressService.getReferCount(address));
+    }
+
+    @RequestMapping(method = RequestMethod.GET, path = "/{address}" + PATH_CODE)
+    public ApiReplyAO<AddressAOCodeRsp> getShortCode(@PathVariable String address){
+        return ApiReplyAOFactory.ok(addressService.getShortCode(address));
     }
 }

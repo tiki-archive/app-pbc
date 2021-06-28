@@ -5,6 +5,7 @@
 
 package com.mytiki.blockchain.features.latest.address;
 
+@Deprecated
 public class AddressAOReferRsp {
 
     private Integer count;
